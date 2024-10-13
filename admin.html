@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <h2>Admin Login</h2>
+    <form id="admin-login">
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+        <button type="submit">Login</button>
+    </form>
+    <p id="error-message"></p>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.getElementById('admin-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const enteredPassword = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            try {
+                const adminDoc = await db.collection('admin').doc('admin').get();
+                if (adminDoc.exists && adminDoc.data().password === enteredPassword) {
+                    window.location.href = "add_tournament.html";  // Redirect on success
+                } else {
+                    errorMessage.textContent = "Incorrect password.";
+                }
+            } catch (error) {
+                errorMessage.textContent = "Error checking password.";
+                console.error("Error fetching admin document:", error);
+            }
+        });
+    </script>
+</body>
+</html>

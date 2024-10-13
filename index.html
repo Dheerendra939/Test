@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up with Google</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const { freeFireName, mobileNumber } = userDoc.data();
+                    window.location.href = freeFireName && mobileNumber ? "profile.html" : "profile-settings.html";
+                }
+            }
+        });
+
+        async function signUpWithGoogle() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (!userDoc.exists()) {
+                    await setDoc(userDocRef, {
+                        email: user.email,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                        balance: 10,
+                        freeFireName: "",
+                        mobileNumber: ""
+                    });
+                    window.location.href = "profile-settings.html";
+                } else {
+                    const { freeFireName, mobileNumber } = userDoc.data();
+                    window.location.href = freeFireName && mobileNumber ? "profile.html" : "profile-settings.html";
+                }
+            } catch (error) {
+                console.error("Error during Google Sign-In:", error);
+            }
+        }
+
+        window.onload = () => {
+            document.getElementById("googleSignUpButton").addEventListener("click", signUpWithGoogle);
+        };
+    </script>
+</head>
+<body>
+    <div class="sign-up-container">
+        <h1>Sign Up with Google</h1>
+        <button id="googleSignUpButton">Sign Up with Google</button>
+    </div>
+</body>
+</html>

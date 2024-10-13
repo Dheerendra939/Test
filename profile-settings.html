@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        async function saveProfileSettings() {
+            const user = auth.currentUser;
+            if (user) {
+                const freeFireName = document.getElementById("freeFireName").value;
+                const mobileNumber = document.getElementById("mobileNumber").value;
+
+                await updateDoc(doc(db, "users", user.uid), {
+                    freeFireName,
+                    mobileNumber
+                });
+
+                window.location.href = "profile.html";
+            }
+        }
+
+        window.onload = () => {
+            document.getElementById("saveProfileButton").addEventListener("click", saveProfileSettings);
+        };
+    </script>
+</head>
+<body>
+    <div class="profile-settings-container">
+        <h2>Complete Your Profile</h2>
+        <label for="freeFireName">Free Fire Name:</label>
+        <input type="text" id="freeFireName" placeholder="Enter your Free Fire Name" required>
+
+        <label for="mobileNumber">Mobile Number:</label>
+        <input type="tel" id="mobileNumber" placeholder="Enter your Mobile Number" required>
+
+        <button id="saveProfileButton">Save</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Tournament</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <h2>Add Tournament</h2>
+    <form id="add-tournament-form">
+        <label for="name">Tournament Name:</label>
+        <input type="text" id="name" required>
+        <br>
+        <label for="details">Details:</label>
+        <textarea id="details" required></textarea>
+        <br>
+        <label for="entryFee">Entry Fee:</label>
+        <input type="number" id="entryFee" required>
+        <br>
+        <button type="submit">List Tournament</button>
+    </form>
+    <p id="message"></p>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.getElementById('add-tournament-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const details = document.getElementById('details').value;
+            const entryFee = document.getElementById('entryFee').value;
+            const messageElement = document.getElementById('message');
+
+            try {
+                await db.collection('tournaments').doc(name).set({
+                    details: details,
+                    entryFee: entryFee
+                });
+                messageElement.textContent = "Tournament listed successfully!";
+            } catch (error) {
+                messageElement.textContent = "Error listing tournament.";
+                console.error("Error adding tournament:", error);
+            }
+        });
+    </script>
+</body>
+</html>

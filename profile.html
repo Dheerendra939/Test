@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    document.getElementById("profilePic").src = userData.photoURL || "default-profile.png";
+                    document.getElementById("freeFireName").textContent = `Free Fire Name: ${userData.freeFireName || "N/A"}`;
+                    document.getElementById("balance").textContent = `Balance: ₹${userData.balance || 0}`;
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <button onclick="location.href='profile.html'">Profile</button>
+        <button onclick="location.href='tournaments.html'">Tournaments</button>
+        <button onclick="location.href='joined.html'">Joined</button>
+    </nav>
+    <div class="profile-container">
+        <img id="profilePic" src="default-profile.png" alt="Profile Picture" class="profile-pic">
+        <h2 id="freeFireName">Free Fire Name: Loading...</h2>
+        <h3 id="balance">Balance: Loading...</h3>
+    </div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournaments</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <h2>Upcoming Tournaments</h2>
+    <div id="tournament-list"></div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Load user balance and tournament data
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                const userRef = db.collection('users').doc(user.uid);
+                const userDoc = await userRef.get();
+                const userData = userDoc.data();
+                let userBalance = userData.balance;
+                const freeFireName = userData.freeFireName;
+
+                // Fetch and display tournaments
+                const tournamentsSnapshot = await db.collection('tournaments').get();
+                tournamentsSnapshot.forEach(doc => {
+                    const tournament = doc.data();
+                    const tournamentId = doc.id;
+                    document.getElementById('tournament-list').innerHTML += `
+                        <div>
+                            <h3>${tournamentId}</h3>
+                            <p>${tournament.details}</p>
+                            <p>Entry Fee: ₹${tournament.entryFee}</p>
+                            <button onclick="joinTournament('${tournamentId}', '${freeFireName}', ${userBalance}, ${tournament.entryFee})">Join</button>
+                        </div>
+                    `;
+                });
+            } else {
+                window.location.href = 'signup.html'; // Redirect to signup if not logged in
+            }
+        });
+
+        // Join tournament function
+        async function joinTournament(tournamentId, freeFireName, userBalance, entryFee) {
+            const userId = auth.currentUser.uid;
+
+            // Fetch updated user balance
+            const userRef = db.collection('users').doc(userId);
+            const userSnapshot = await userRef.get();
+            userBalance = userSnapshot.data().balance;  // Use the most updated balance
+
+            // Check if the user has sufficient balance
+            if (userBalance < entryFee) {
+                alert("Insufficient balance! Please add more balance.");
+                window.location.href = 'add-balance.html'; // Redirect to add-balance page
+                return;
+            }
+
+            const tournamentRef = db.collection('tournaments').doc(tournamentId);
+            const groupsSnapshot = await tournamentRef.collection('groups').get();
+
+            let groupNumber = 1;
+            let addedToGroup = false;
+
+            // Check existing groups for the player
+            while (groupNumber <= groupsSnapshot.size + 1) {
+                const groupRef = tournamentRef.collection('groups').doc(`group-${groupNumber}`);
+                const groupSnapshot = await groupRef.get();
+                const players = groupSnapshot.exists ? groupSnapshot.data().players || [] : [];
+
+                if (!players.includes(freeFireName)) {
+                    if (players.length < 48) {
+                        // Add player to group if not full
+                        players.push(freeFireName);
+                        await groupRef.set({ players });
+                        addedToGroup = true;
+                        break;
+                    }
+                }
+                groupNumber++;
+            }
+
+            // If no group could add the player, create a new group
+            if (!addedToGroup) {
+                const newGroupRef = tournamentRef.collection('groups').doc(`group-${groupNumber}`);
+                await newGroupRef.set({ players: [freeFireName] });
+            }
+
+            // Deduct entry fee from user balance after successful join
+            await userRef.update({
+                balance: firebase.firestore.FieldValue.increment(-entryFee)
+            });
+
+            alert("Successfully joined the tournament!");
+            window.location.href = 'joined.html'; // Redirect to joined.html
+        }
+    </script>
+</body>
+</html>
