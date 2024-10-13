@@ -50,6 +50,10 @@
         auth.onAuthStateChanged(async user => {
             if (user) {
                 const userId = user.uid;
+                const userRef = db.collection('users').doc(userId);
+                const userDoc = await userRef.get();
+                const freeFireName = userDoc.data().freeFireName;
+
                 const tournamentsRef = db.collection('tournaments');
 
                 // Fetch all tournaments
@@ -69,27 +73,33 @@
                         const players = groupData.players || [];
                         const groupNumber = groupDoc.id;
 
-                        // Create title for the group
-                        const groupElement = document.createElement('div');
-                        groupElement.classList.add('group');
-                        groupElement.innerHTML = `<div class="group-title">${tournamentId} - ${groupNumber}</div>`;
+                        // Check if the user is in this group
+                        if (players.includes(freeFireName)) {
+                            // Create title for the group
+                            const groupElement = document.createElement('div');
+                            groupElement.classList.add('group');
+                            groupElement.innerHTML = `<div class="group-title">${tournamentId} - ${groupNumber}</div>`;
 
-                        // Create players list
-                        const playersList = document.createElement('div');
-                        playersList.classList.add('players-list');
+                            // Create players list
+                            const playersList = document.createElement('div');
+                            playersList.classList.add('players-list');
 
-                        players.forEach((player, index) => {
-                            const playerElement = document.createElement('div');
-                            playerElement.classList.add('player');
-                            playerElement.textContent = `${index + 1}. ${player}`;
-                            playersList.appendChild(playerElement);
-                        });
+                            players.forEach((player, index) => {
+                                const playerElement = document.createElement('div');
+                                playerElement.classList.add('player');
+                                playerElement.textContent = `${index + 1}. ${player}`;
+                                playersList.appendChild(playerElement);
+                            });
 
-                        groupElement.appendChild(playersList);
-                        tournamentElement.appendChild(groupElement);
+                            groupElement.appendChild(playersList);
+                            tournamentElement.appendChild(groupElement);
+                        }
                     });
 
-                    document.getElementById('joined-tournaments').appendChild(tournamentElement);
+                    // Only append tournament element if there are valid groups
+                    if (tournamentElement.children.length > 0) {
+                        document.getElementById('joined-tournaments').appendChild(tournamentElement);
+                    }
                 });
             } else {
                 window.location.href = 'signup.html'; // Redirect to signup if not logged in
