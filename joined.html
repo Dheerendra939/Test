@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joined Tournaments</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <style>
+        .tournament {
+            margin-bottom: 20px;
+        }
+        .group {
+            margin-bottom: 10px;
+        }
+        .group-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .players-list {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .player {
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Joined Tournaments</h2>
+    <div id="joined-tournaments"></div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-7cRAqpPWQpOw5BBgsuRXkP1HVzWATw0",
+            authDomain: "tournafire-tournaments.firebaseapp.com",
+            projectId: "tournafire-tournaments",
+            storageBucket: "tournafire-tournaments.appspot.com",
+            messagingSenderId: "528755260907",
+            appId: "1:528755260907:web:be6be1fd22a816d8026dae",
+            measurementId: "G-EWRVXLKEJW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Load user joined tournaments and display group data
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                const userId = user.uid;
+                const tournamentsRef = db.collection('tournaments');
+
+                // Fetch all tournaments
+                const tournamentsSnapshot = await tournamentsRef.get();
+                tournamentsSnapshot.forEach(async doc => {
+                    const tournament = doc.data();
+                    const tournamentId = doc.id;
+                    const tournamentElement = document.createElement('div');
+                    tournamentElement.classList.add('tournament');
+
+                    // Fetch the groups subcollection
+                    const groupsRef = tournamentsRef.doc(tournamentId).collection('groups');
+                    const groupsSnapshot = await groupsRef.get();
+
+                    groupsSnapshot.forEach(groupDoc => {
+                        const groupData = groupDoc.data();
+                        const players = groupData.players || [];
+                        const groupNumber = groupDoc.id;
+
+                        // Create title for the group
+                        const groupElement = document.createElement('div');
+                        groupElement.classList.add('group');
+                        groupElement.innerHTML = `<div class="group-title">${tournamentId} - ${groupNumber}</div>`;
+
+                        // Create players list
+                        const playersList = document.createElement('div');
+                        playersList.classList.add('players-list');
+
+                        players.forEach((player, index) => {
+                            const playerElement = document.createElement('div');
+                            playerElement.classList.add('player');
+                            playerElement.textContent = `${index + 1}. ${player}`;
+                            playersList.appendChild(playerElement);
+                        });
+
+                        groupElement.appendChild(playersList);
+                        tournamentElement.appendChild(groupElement);
+                    });
+
+                    document.getElementById('joined-tournaments').appendChild(tournamentElement);
+                });
+            } else {
+                window.location.href = 'signup.html'; // Redirect to signup if not logged in
+            }
+        });
+    </script>
+</body>
+</html>
